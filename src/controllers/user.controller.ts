@@ -5,32 +5,59 @@ import { User } from "../models/user.model";
 export const followUser = async (request: Request, response: Response) => {
   try {
     const userId = request.user;
-    const userToFollowId = request.params.id;
+    const userToFollow = await User.findOne({ username: request.params.username });
+    if (!userToFollow) {
+      return response.status(404).json({ message: "User not found!" });
+    }
+
+    if (request.user?.username === userToFollow?.username) {
+      return response.status(400).json({ message: "You are not allowed to follow yourself." });
+    }
+
+    const userToFollowId = userToFollow?.id;
     await User.findByIdAndUpdate(userId, { $addToSet: { following: userToFollowId } });
     await User.findByIdAndUpdate(userToFollowId, { $addToSet: { followers: userId } });
     response.status(200).json({ message: "User followed successfully." });
   } catch (error) {
-    response.status(400).json({ error: "Error following user." });
+    console.log(error);
+    response.status(500).json({ error: "Error following user." });
   }
 };
 
-export const unfollowUser = async (req: Request, res: Response) => {
+export const unfollowUser = async (request: Request, response: Response) => {
   try {
-    const userId = req.user?.id;
-    const userToUnfollowId = req.params.id;
+    const userId = request.user?.id;
+    const userToUnfollow = await User.findOne({ username: request.params.username });
+    if (!userToUnfollow) {
+      return response.status(404).json({ message: "User not found!" });
+    }
+
+    if (request.user?.username === userToUnfollow?.username) {
+      return response.status(400).json({ message: "You are not allowed to unfollow yourself." });
+    }
+
+    const userToUnfollowId = userToUnfollow?.id;
     await User.findByIdAndUpdate(userId, { $pull: { following: userToUnfollowId } });
     await User.findByIdAndUpdate(userToUnfollowId, { $pull: { followers: userId } });
-    res.status(200).json({ message: "User unfollowed successfully." });
+    response.status(200).json({ message: "User unfollowed successfully." });
   } catch (error) {
-    res.status(400).json({ error: "Error unfollowing user." });
+    console.log(error);
+    response.status(500).json({ error: "Error unfollowing user." });
   }
 };
 
-export const getUserProfile = async (req: Request, res: Response) => {
+export const getUserProfile = async (request: Request, response: Response) => {
   try {
-    const user = await User.findById(req.params.id).populate("followers following", "username email");
-    res.status(200).json(user);
+    const user = await User.findOne(
+      { username: request.params.username },
+      { password: false, _id: false, __v: false },
+    ).populate("followers following", "username email");
+    if (!user) {
+      return response.status(404).json({ message: "User not found!" });
+    }
+    response.status(200).json(user);
   } catch (error) {
-    res.status(400).json({ error: "Error fetching user profile." });
+    console.log(error);
+    response.status(500).json({ error: "Error fetching user profile." });
   }
 };

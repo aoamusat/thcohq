@@ -9,8 +9,8 @@ const router = express.Router();
 // User routes
 router.post("/register", register);
 router.post("/login", login);
-router.post("/follow/:id", authMiddleware, followUser);
-router.post("/unfollow/:id", authMiddleware, unfollowUser);
-router.get("/profile/:id", authMiddleware, getUserProfile);
+router.post("/follow/:username", authMiddleware, followUser);
+router.post("/unfollow/:username", authMiddleware, unfollowUser);
+router.get("/profile/:username", authMiddleware, getUserProfile);
 
 export default router;
