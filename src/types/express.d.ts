@@ -3,9 +3,9 @@ import { IUser } from "../models/user.model";
 import { JwtPayload } from "jsonwebtoken";
 
 declare global {
-  namespace Express {
-    interface Request {
-      user?: IUser;
-    }
-  }
+   namespace Express {
+      interface Request {
+         user?: IUser;
+      }
+   }
 }

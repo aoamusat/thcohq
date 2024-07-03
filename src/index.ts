@@ -15,12 +15,12 @@ app.use("/api/v1/posts/", postRouter);
 app.use("/api/v1/users/", userRouter);
 
 mongoose
-  .connect(process.env.MONGODB_URI || "")
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((error) => {
-    console.error("Database connection error:", error);
-  });
+   .connect(process.env.MONGODB_URI || "")
+   .then(() => {
+      app.listen(PORT, () => {
+         console.log(`Server running on port ${PORT}`);
+      });
+   })
+   .catch((error) => {
+      console.error("Database connection error:", error);
+   });
