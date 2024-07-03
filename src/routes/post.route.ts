@@ -6,9 +6,9 @@ import { authMiddleware } from "../middleware/auth.middleware";
 const router = express.Router();
 
 // Post routes
-router.post("/posts", authMiddleware, createPost);
+router.post("/", authMiddleware, createPost);
 router.get("/feed", authMiddleware, getFeed);
-router.post("/posts/:postId/like", authMiddleware, likePost);
-router.post("/posts/:postId/comments", authMiddleware, commentOnPost);
+router.post("/:postId/like", authMiddleware, likePost);
+router.post("/:postId/comments", authMiddleware, commentOnPost);
 
 export default router;

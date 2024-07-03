@@ -11,8 +11,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
-app.use("/api/v1/post/", postRouter);
-app.use("/api/v1/user/", userRouter);
+app.use("/api/v1/posts/", postRouter);
+app.use("/api/v1/users/", userRouter);
 
 mongoose
   .connect(process.env.MONGODB_URI || "")

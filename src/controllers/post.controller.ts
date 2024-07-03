@@ -2,16 +2,32 @@
 import { Request, Response } from "express";
 import { Post } from "../models/post.model";
 import { User } from "../models/user.model";
+import Joi from "joi";
+import { ObjectId } from "mongoose";
 
 export const createPost = async (request: Request, response: Response) => {
   try {
-    const { text, attachments } = request.body;
-    // @ts-ignore
-    const newPost = new Post({ author: request.user?.id, text, attachments });
+    const schema = Joi.object({
+      text: Joi.string().required().max(500),
+    });
+
+    const { error } = schema.validate(request.body, { abortEarly: true });
+    if (error) {
+      return response.status(400).json({ message: error.details[0].message });
+    }
+
+    const { text } = request.body;
+
+    let attachments: string[] = [];
+    if (request.files) {
+      attachments = (request.files as Express.Multer.File[]).map((file) => file.path);
+    }
+    const newPost = new Post({ text: text, attachments: attachments, author: request.user?._id });
     await newPost.save();
     return response.status(201).json({ message: "Post created successfully.", post: newPost });
   } catch (error) {
-    return response.status(400).json({ error: "Error creating post." });
+    console.log(error);
+    return response.status(500).json({ error: "Error creating post." });
   }
 };
 
