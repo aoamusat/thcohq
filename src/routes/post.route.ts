@@ -21,7 +21,7 @@ router.post(
    createPost,
 );
 router.get("/:postId", authMiddleware, getPost);
-router.get("/feed", authMiddleware, getFeed);
+router.get("/user/feeds", authMiddleware, getFeed);
 router.post("/:postId/like", authMiddleware, likePost);
 router.post("/:postId/comments", authMiddleware, commentOnPost);
 

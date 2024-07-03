@@ -48,12 +48,7 @@ export const getPost = async (request: Request, response: Response) => {
          "username email",
       );
       return response.status(200).json({
-         message: "Post created successfully.",
-         post: {
-            ...post?.toObject(),
-            numOfLikes: post?.likes.length,
-            numOfComments: post?.comments.length,
-         },
+         post,
       });
    } catch (error) {
       console.log(error);
@@ -63,7 +58,7 @@ export const getPost = async (request: Request, response: Response) => {
 
 export const getFeed = async (request: Request, response: Response) => {
    try {
-      const user = await User.findOne({ email: request.user?.email });
+      const user = await User.findById(request.user?._id);
       const page = parseInt(request.query.page as string) || 1;
       const limit = parseInt(request.query.limit as string) || 10;
       const posts = await Post.find({ author: { $in: user?.following } })
@@ -73,7 +68,7 @@ export const getFeed = async (request: Request, response: Response) => {
          .populate("author", "username email");
       response.status(200).json(posts);
    } catch (error) {
-      response.status(400).json({ error: "Error fetching feed." });
+      response.status(500).json({ error: "Error fetching feed." });
    }
 };
 
