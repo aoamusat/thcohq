@@ -55,7 +55,7 @@ npm run build
 npm run start # for production
 ```
 ## API Documentation
-For detailed API endpoints and their functionalities, please refer to the Postman collection provided in the repository.
+For detailed API endpoints and their functionalities, see the [documentation](https://documenter.getpostman.com/view/1121711/2sA3dxEXqd) on [Postman documenter](https://documenter.getpostman.com/view/1121711/2sA3dxEXqd).
 
 ## Error Handling
 The API returns appropriate HTTP status codes and error messages for different scenarios, such as:
