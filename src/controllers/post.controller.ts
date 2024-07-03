@@ -5,6 +5,8 @@ import { User } from "../models/user.model";
 import Joi from "joi";
 import { pusher } from "../config/pusher";
 import { extractMentions } from "../utils/helpers";
+import { RedisCache } from "../config/redis";
+import mongoose from "mongoose";
 
 export const createPost = async (request: Request, response: Response) => {
    try {
@@ -63,13 +65,33 @@ export const createPost = async (request: Request, response: Response) => {
 export const getPost = async (request: Request, response: Response) => {
    try {
       const { postId } = request.params;
+      if (!mongoose.Types.ObjectId.isValid(postId)) {
+         return response.status(400).json({ error: "Invalid postId" });
+      }
+      const cachedPost = JSON.parse(
+         (await RedisCache.get(`post:${postId}`)) as string,
+      );
+      console.log({ cachedPost });
+      if (cachedPost) {
+         return response.status(200).json({
+            post: cachedPost,
+         });
+      }
       const post = await Post.findById(postId).populate(
          "author",
          "username email",
       );
-      return response.status(200).json({
-         post,
-      });
+      if (post) {
+         response.status(200).json({
+            post,
+         });
+
+         await RedisCache.set(`post:${postId}`, JSON.stringify(post), {
+            EX: 24 * 60 * 60,
+         });
+      } else {
+         return response.status(404).json({ message: "Post not found!" });
+      }
    } catch (error) {
       console.log(error);
       return response.status(500).json({ error: "Error getting post." });
@@ -94,9 +116,16 @@ export const getFeed = async (request: Request, response: Response) => {
 
 export const likePost = async (request: Request, response: Response) => {
    try {
+      if (!mongoose.Types.ObjectId.isValid(request.params.postId)) {
+         return response.status(400).json({ error: "Invalid postId" });
+      }
       const post = await Post.findByIdAndUpdate(request.params.postId, {
          $addToSet: { likes: request.user?._id },
       });
+
+      if (!post) {
+         return response.status(404).json({ message: "Post not found!" });
+      }
 
       response.status(200).json({ message: "Post liked successfully." });
 
@@ -114,6 +143,9 @@ export const likePost = async (request: Request, response: Response) => {
 export const commentOnPost = async (request: Request, response: Response) => {
    try {
       const postId = request.params.postId;
+      if (!mongoose.Types.ObjectId.isValid(postId)) {
+         return response.status(400).json({ error: "Invalid postId" });
+      }
       const schema = Joi.object({
          text: Joi.string().required().max(500),
       });
@@ -133,6 +165,10 @@ export const commentOnPost = async (request: Request, response: Response) => {
       const post = await Post.findByIdAndUpdate(postId, {
          $push: { comments: comment },
       });
+
+      if (!post) {
+         return response.status(404).json({ message: "Post not found!" });
+      }
 
       response
          .status(200)
