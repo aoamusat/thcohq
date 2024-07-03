@@ -3,6 +3,8 @@ import { Request, Response } from "express";
 import { Post } from "../models/post.model";
 import { User } from "../models/user.model";
 import Joi from "joi";
+import { pusher } from "../config/pusher";
+import { extractMentions } from "../utils/helpers";
 
 export const createPost = async (request: Request, response: Response) => {
    try {
@@ -31,9 +33,27 @@ export const createPost = async (request: Request, response: Response) => {
          author: request.user?._id,
       });
       await newPost.save();
-      return response
+
+      response
          .status(201)
          .json({ message: "Post created successfully.", post: newPost });
+
+      // Extract mentioned usernames
+      const mentionedUsernames = extractMentions(text);
+
+      // Check for mentioned users
+      const mentionedUsers = await User.find({
+         username: { $in: mentionedUsernames },
+      });
+
+      mentionedUsers.forEach(async (user) => {
+         await pusher.trigger("thco-channel", "mention-event", {
+            mentioner: request.user?.username,
+            mentionee: user.username,
+            postId: newPost._id,
+            text: `${request.user?.username} tagged you in their post.`,
+         });
+      });
    } catch (error) {
       console.log(error);
       return response.status(500).json({ error: "Error creating post." });
@@ -74,11 +94,18 @@ export const getFeed = async (request: Request, response: Response) => {
 
 export const likePost = async (request: Request, response: Response) => {
    try {
-      const postId = request.params.postId;
-      await Post.findByIdAndUpdate(postId, {
+      const post = await Post.findByIdAndUpdate(request.params.postId, {
          $addToSet: { likes: request.user?._id },
       });
-      return response.status(200).json({ message: "Post liked successfully." });
+
+      response.status(200).json({ message: "Post liked successfully." });
+
+      await pusher.trigger("thco-channel", "like-event", {
+         authorId: post?.author._id,
+         postId: post?._id,
+         event: "like",
+         text: `${request.user?.username} liked your post.`,
+      });
    } catch (error) {
       response.status(400).json({ error: "Error liking post." });
    }
@@ -103,10 +130,21 @@ export const commentOnPost = async (request: Request, response: Response) => {
          text,
          createdAt: new Date(),
       };
-      await Post.findByIdAndUpdate(postId, { $push: { comments: comment } });
+      const post = await Post.findByIdAndUpdate(postId, {
+         $push: { comments: comment },
+      });
+
       response
          .status(200)
          .json({ message: "Comment added successfully.", comment });
+
+      await pusher.trigger("thco-channel", "comment-event", {
+         authorId: post?.author._id,
+         postId: post?._id,
+         event: "like",
+         text: `${request.user?.username} commented on your post.`,
+         comment: text,
+      });
    } catch (error) {
       response.status(400).json({ error: "Error adding comment." });
    }
