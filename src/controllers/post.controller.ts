@@ -31,6 +31,17 @@ export const createPost = async (request: Request, response: Response) => {
   }
 };
 
+export const getPost = async (request: Request, response: Response) => {
+  try {
+    const { postId } = request.params;
+    const post = await Post.findById(postId).populate("author", "username email");
+    return response.status(200).json({ message: "Post created successfully.", post });
+  } catch (error) {
+    console.log(error);
+    return response.status(500).json({ error: "Error getting post." });
+  }
+};
+
 export const getFeed = async (request: Request, response: Response) => {
   try {
     const user = await User.findOne({ email: request.user?.email });
@@ -50,7 +61,7 @@ export const getFeed = async (request: Request, response: Response) => {
 export const likePost = async (request: Request, response: Response) => {
   try {
     const postId = request.params.postId;
-    await Post.findByIdAndUpdate(postId, { $addToSet: { likes: request.user?.id } });
+    await Post.findByIdAndUpdate(postId, { $addToSet: { likes: request.user?._id } });
     return response.status(200).json({ message: "Post liked successfully." });
   } catch (error) {
     response.status(400).json({ error: "Error liking post." });
@@ -60,8 +71,16 @@ export const likePost = async (request: Request, response: Response) => {
 export const commentOnPost = async (request: Request, response: Response) => {
   try {
     const postId = request.params.postId;
+    const schema = Joi.object({
+      text: Joi.string().required().max(500),
+    });
+
+    const { error } = schema.validate(request.body, { abortEarly: true });
+    if (error) {
+      return response.status(400).json({ message: error.details[0].message });
+    }
     const { text } = request.body;
-    const comment = { userId: request.user?.id, text, createdAt: new Date() };
+    const comment = { userId: request.user?._id, text, createdAt: new Date() };
     await Post.findByIdAndUpdate(postId, { $push: { comments: comment } });
     response.status(200).json({ message: "Comment added successfully.", comment });
   } catch (error) {
