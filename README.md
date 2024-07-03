@@ -16,23 +16,18 @@ This is a RESTful API for a basic social media platform. The API facilitates use
 - Notifications
   - Real-time notifications for mentions, likes, and comments using Pusher.
 ## Technical Specifications
-- Backend Framework: Express.js
-- Database: MongoDB with Mongoose as the ODM
+- Backend Framework: [Express.js](https://expressjs.com/)
+- Database: MongoDB with [Mongoose](https://mongoosejs.com/) as the ODM
 - Real-time Notifications: Pusher
 - Authentication: JWT
-- Language: TypeScript
+- Language: [TypeScript](https://www.typescriptlang.org/)
 ## Setup Instructions
 ### Prerequisites
-- Node.js (>= 14.x)
-MongoDB
-- Pusher account (for real-time notifications)
+- [Node.js](https://nodejs.org/en) (>= 16.x)
+- [MongoDB](https://www.mongodb.com/atlas)
+- [Pusher](https://pusher.com/) (for real-time notifications)
 ### Installation
 1. Clone the repository:
-
-```bash
-git clone https://gitlab.com/your-repository-url.git
-cd your-repository-url
-```
 2. Install dependencies:
 
 ```bash
@@ -53,7 +48,10 @@ PUSHER_CLUSTER=your_pusher_cluster
 
 ```bash
 npm run dev # for local development
-
+```
+You can also build the code before running the server (especially for production)
+```bash
+npm run build
 npm run start # for production
 ```
 ## API Documentation
